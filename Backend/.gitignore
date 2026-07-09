@@ -1,0 +1,106 @@
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDEs & Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+logs/
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Dependencies
+node_modules/
+vendor/
+
+# Build outputs
+dist/
+build/
+out/
+target/
+bin/
+
+# Cache
+.cache/
+tmp/
+temp/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+
+# Java
+*.class
+*.jar
+*.war
+.gradle/
+.gradle-cache/
+
+# Kotlin
+*.kts~
+
+# C/C++
+*.o
+*.obj
+*.exe
+*.dll
+*.so
+*.a
+
+# Go
+*.test
+coverage.out
+
+# Rust
+target/
+Cargo.lock
+
+# .NET
+bin/
+obj/
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+
+# Coverage
+coverage/
+.coverage
+htmlcov/
+
+# Package managers
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Archives
+*.zip
+*.tar
+*.gz
+*.rar
+
+# Secrets
+*.pem
+*.key
+*.crt
+
+# Misc
+*.tmp
+*.bak
