@@ -6,10 +6,8 @@ const sessionSchema = new mongoose.Schema({
         ref: "User",
         required: [true, "User is required"]
     },
-    refreshToken: {
-        type: String,
-        required: [true, "Refresh token is required"]
-    },
+    // session.model.js schema me
+    refreshToken: { type: String, required: true, index: true },
     ip: {
         type: String,
         required: [true, "IP address is required"]
