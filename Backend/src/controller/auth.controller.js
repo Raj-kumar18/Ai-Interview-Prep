@@ -2,8 +2,12 @@ import { userModel } from "../models/user.models.js"
 import jwt from "jsonwebtoken"
 import bcrypt from "bcrypt"
 import crypto from "crypto"
-import config from "../utils/config.js"
 import { sessionModel } from "../models/session.model.js"
+import { otpModel } from "../models/otp.models.js"
+import { sendEmail } from "../services/email.js"
+import { generateOtp, getOtpHtml } from "../utils/utils.js"
+import config from "../utils/config.js"
+
 
 // Helper: deterministic hash for refresh token lookup
 // (bcrypt is non-deterministic due to random salt, so it can't be used in a findOne query)
@@ -29,24 +33,26 @@ export const registerController = async (req, res) => {
 
         const user = await userModel.create({ username, email, password: hashedPassword })
 
-        const refreshToken = jwt.sign({ id: user._id }, config.JWT_SECRET, { expiresIn: "7d" })
-        const refreshTokenHash = hashToken(refreshToken) // <-- SHA-256, deterministic
 
-        const session = await sessionModel.create({
+        //genrateOtp
+
+        const otp = generateOtp()
+        const html = getOtpHtml(otp)
+        const otpHash = hashToken(otp)
+
+        await otpModel.create({
             user: user._id,
-            refreshToken: refreshTokenHash, // storing the SHA-256 hash, not bcrypt
-            ip: req.ip,
-            userAgent: req.headers["user-agent"],
+            otpHash,
+            email: user.email
         })
 
-        const accessToken = jwt.sign({ id: user._id, sessionId: session._id }, config.JWT_SECRET, { expiresIn: "15m" })
+        await sendEmail({ to: user.email, subject: "Verify Your Email", html })
 
-        res.cookie("refreshToken", refreshToken, { httpOnly: true, secure: true, sameSite: "strict", maxAge: 7 * 24 * 60 * 60 * 1000 })
+
 
         res.status(201).json({
             message: "User created successfully",
-            user: { id: user._id, username: user.username, email: user.email },
-            accessToken
+            user: { id: user._id, username: user.username, email: user.email, isVerified: user.isVerified }
         })
     } catch (error) {
         res.status(500).json({ message: error.message })
@@ -61,6 +67,10 @@ export async function loginController(req, res) {
     const user = await userModel.findOne({ email })
     if (!user) {
         return res.status(400).json({ message: "User not found" })
+    }
+
+    if (!user.isVerified) {
+        return res.status(400).json({ message: "User is not verified" })
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.password)
@@ -208,4 +218,49 @@ export async function logoutAllController(req, res) {
     res.status(200).json({ message: "Logout from all devices successfully" })
 
 
+}
+
+
+
+export async function verifyEmail(req, res) {
+    try {
+        const { email, otp } = req.body
+
+        if (!email || !otp) {
+            return res.status(400).json({ message: "Email and OTP are required" })
+        }
+
+        const user = await userModel.findOne({ email })
+        if (!user) {
+            return res.status(400).json({ message: "User not found" })
+        }
+
+        if (user.isVerified) {
+            return res.status(400).json({ message: "User is already verified" })
+        }
+
+        const otpHash = hashToken(otp)
+        const storedOtp = await otpModel.findOne({
+            user: user._id,
+            otpHash,
+            email: user.email
+        })
+
+        if (!storedOtp) {
+            return res.status(400).json({ message: "Invalid or expired OTP" })
+        }
+
+        user.isVerified = true
+        await user.save()
+
+        await otpModel.deleteMany({ _id: storedOtp._id })
+
+        res.status(200).json({
+            message: "Email verified successfully",
+            user: { id: user._id, username: user.username, email: user.email }
+        })
+    } catch (error) {
+        console.log(error)
+        res.status(500).json({ message: "Internal Server Error" })
+    }
 }
