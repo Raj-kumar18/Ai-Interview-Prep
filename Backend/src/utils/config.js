@@ -36,9 +36,8 @@ const config = {
     GOOGLE_USER: process.env.GOOGLE_USER,
     MONGO_URI: process.env.MONGO_URI,
     PORT: process.env.PORT,
-    JWT_SECRET: process.env.JWT_SECRET
+    JWT_SECRET: process.env.JWT_SECRET,
+    GOOGLE_API_KEY: process.env.GOOGLE_API_KEY
 }
-
-console.log(config)
 
 export default config
