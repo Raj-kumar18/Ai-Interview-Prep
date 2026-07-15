@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-    baseURL: "interviewprevai-production.up.railway.app/api/ai",
+    baseURL: "https://interviewprevai-production.up.railway.app/api/ai",
     withCredentials: true,
 });
 
