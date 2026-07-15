@@ -1,1 +1,52 @@
 @import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap');
+
+@theme {
+  --font-sans: "Inter", sans-serif;
+  --font-display: "Outfit", sans-serif;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: #0d1117;
+  color: #e6edf3;
+  overflow-x: hidden;
+}
+
+/* Sleek modern scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0d1117;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #2a3348;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #ff2d78;
+}
+
+/* Glassmorphism helpers */
+.glass-panel {
+  background: rgba(22, 27, 34, 0.45);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.glass-panel-hover {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-panel-hover:hover {
+  background: rgba(22, 27, 34, 0.65);
+  border-color: rgba(239, 12, 133, 0.3);
+  box-shadow: 0 10px 30px -10px rgba(239, 12, 133, 0.15);
+  transform: translateY(-2px);
+}

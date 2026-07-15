@@ -1,9 +1,41 @@
 import { Link } from "react-router";
-
+import { useAuth } from "../hook/useAuth";
+import { useState } from "react";
+import { useNavigate } from "react-router";
+import toast from "react-hot-toast";
 export const Login = () => {
+    const navigate = useNavigate()
+    const { loading, handleLogin } = useAuth()
+    const [email, setEmail] = useState("")
+    const [password, setPassword] = useState("")
+    const [errors, setErrors] = useState({})
+
+    const handleSubmit = async (e) => {
+        e.preventDefault()
+
+        try {
+            await handleLogin({
+                email,
+                password
+            })
+            toast.success("Login SuccessFully")
+            setErrors({});
+            setEmail("")
+            setPassword("")
+            navigate("/")
+        } catch (error) {
+            if (error.response?.data?.errors) {
+                setErrors(error.response.data.errors);
+            } else {
+
+                toast.error("Login failed");
+            }
+        }
+    }
+
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-black flex items-center justify-center px-4">
-            <form className="w-full max-w-md rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 shadow-2xl">
+            <form onSubmit={handleSubmit} className="w-full max-w-md rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 shadow-2xl">
 
                 {/* Heading */}
                 <div className="mb-6 text-center">
@@ -26,11 +58,29 @@ export const Login = () => {
                     </label>
 
                     <input
+                        value={email}
+                        onChange={(e) => {
+                            setEmail(e.target.value);
+
+                            setErrors((prev) => ({
+                                ...prev,
+                                email: undefined,
+                            }));
+                        }}
                         type="email"
                         id="email"
                         placeholder="john@example.com"
-                        className="w-full rounded-xl border border-slate-700 bg-slate-900/70 px-4 py-2.5 text-white placeholder:text-slate-500 outline-none transition-all duration-200 focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20"
+                        className={`w-full rounded-xl px-4 py-2.5 bg-slate-900/70 text-white outline-none transition
+    ${errors.email
+                                ? "border border-red-500 focus:ring-red-500/20"
+                                : "border border-slate-700 focus:border-pink-500 focus:ring-pink-500/20"
+                            }`}
                     />
+                    {errors.email && (
+                        <p className="mt-1 text-sm text-red-400">
+                            {errors.email[0]}
+                        </p>
+                    )}
                 </div>
 
                 {/* Password */}
@@ -47,11 +97,29 @@ export const Login = () => {
                     </div>
 
                     <input
+                        value={password}
+                        onChange={(e) => {
+                            setPassword(e.target.value);
+
+                            setErrors((prev) => ({
+                                ...prev,
+                                password: undefined,
+                            }));
+                        }}
                         type="password"
                         id="password"
                         placeholder="••••••••"
-                        className="w-full rounded-xl border border-slate-700 bg-slate-900/70 px-4 py-2.5 text-white placeholder:text-slate-500 outline-none transition-all duration-200 focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20"
+                        className={`w-full rounded-xl px-4 py-2.5 bg-slate-900/70 text-white outline-none transition
+    ${errors.password
+                                ? "border border-red-500 focus:ring-red-500/20"
+                                : "border border-slate-700 focus:border-pink-500 focus:ring-pink-500/20"
+                            }`}
                     />
+                    {errors.password && (
+                        <p className="mt-1 text-sm text-red-400">
+                            {errors.password[0]}
+                        </p>
+                    )}
                 </div>
 
                 {/* Remember Me */}
@@ -68,7 +136,7 @@ export const Login = () => {
                 {/* Login Button */}
                 <button
                     type="submit"
-                    className="w-full rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 py-2.5 font-semibold text-white transition-all duration-200 hover:opacity-90 active:scale-[0.98]"
+                    className="w-full cursor-pointer rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 py-2.5 font-semibold text-white transition-all duration-200 hover:opacity-90 active:scale-[0.98]"
                 >
                     Sign In
                 </button>

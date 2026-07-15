@@ -1,9 +1,13 @@
 import { useState, useEffect, useRef } from "react";
-
+import { Link } from "react-router";
+import { useAuth } from "../hook/useAuth";
+import { useNavigate } from "react-router";
+import toast from "react-hot-toast";
 export const Otp = () => {
     const [otp, setOtp] = useState(new Array(4).fill(""));
     const [email, setEmail] = useState("");
-
+    const { loading, handleVerifyEmail, handleResendOtp } = useAuth()
+    const [errors, setErrors] = useState({})
     const inputRef = useRef([]);
 
     useEffect(() => {
@@ -12,6 +16,11 @@ export const Otp = () => {
 
     const handleChange = (index, e) => {
         const value = e.target.value;
+
+        setErrors((prev) => ({
+            ...prev,
+            otp: undefined,
+        }));
 
         if (isNaN(value)) return;
 
@@ -41,20 +50,59 @@ export const Otp = () => {
         }
     };
 
-    const otpSubmit = (e) => {
+    const otpSubmit = async (e) => {
         e.preventDefault();
 
         const combineOtp = otp.join("");
 
         if (combineOtp.length !== 4) {
-            return alert("Please enter a valid OTP");
+            return toast.error("Please enter a valid OTP");
         }
 
-        console.log({
-            email,
-            otp: combineOtp,
-        });
+        try {
+            await handleVerifyEmail({
+                email,
+                otp: combineOtp,
+            });
+
+            toast.success("Email verified successfully");
+
+            setErrors({});
+            setEmail("");
+            setOtp(new Array(4).fill(""));
+
+            navigate("/login");
+
+        } catch (error) {
+
+            if (error.response?.data?.errors) {
+                setErrors(error.response.data.errors);
+            } else {
+                toast.error(error.response?.data?.message || "Email verification failed");
+            }
+        }
     };
+
+    const otpReset = async () => {
+        try {
+            await handleResendOtp({
+                email,
+            });
+
+            toast.success("OTP sent successfully");
+
+            setErrors({});
+            setOtp(new Array(4).fill(""));
+
+        } catch (error) {
+
+            if (error.response?.data?.errors) {
+                setErrors(error.response.data.errors);
+            } else {
+                toast.error(error.response?.data?.message || "Email verification failed");
+            }
+        }
+    }
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-black flex items-center justify-center px-4">
@@ -86,10 +134,26 @@ export const Otp = () => {
                         id="email"
                         type="email"
                         value={email}
-                        onChange={(e) => setEmail(e.target.value)}
+                        onChange={(e) => {
+                            setEmail(e.target.value);
+
+                            setErrors((prev) => ({
+                                ...prev,
+                                email: undefined,
+                            }));
+                        }}
                         placeholder="john@example.com"
-                        className="w-full rounded-xl border border-slate-700 bg-slate-900/70 px-4 py-2.5 text-white placeholder:text-slate-500 outline-none transition focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20"
+                        className={`w-full rounded-xl px-4 py-2.5 bg-slate-900/70 text-white outline-none transition
+    ${errors.email
+                                ? "border border-red-500 focus:ring-red-500/20"
+                                : "border border-slate-700 focus:border-pink-500 focus:ring-pink-500/20"
+                            }`}
                     />
+                    {errors.email && (
+                        <p className="mt-1 text-sm text-red-400">
+                            {errors.email[0]}
+                        </p>
+                    )}
                 </div>
 
                 {/* OTP */}
@@ -110,18 +174,30 @@ export const Otp = () => {
                                 onChange={(e) => handleChange(index, e)}
                                 onKeyDown={(e) => handleKeyDown(index, e)}
                                 onClick={() => handleClick(index)}
-                                className="h-14 w-14 rounded-xl border border-slate-700 bg-slate-900/70 text-center text-xl font-semibold text-white outline-none transition focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20"
+                                className={`h-14 w-14 rounded-xl border border-slate-700 bg-slate-900/70 text-center text-xl font-semibold text-white outline-none transition
+      ${errors.otp?.[index]
+                                        ? "border-red-500 focus:ring-red-500/20"
+                                        : "focus:border-pink-500 focus:ring-pink-500/20"
+                                    }`}
                             />
+
                         ))}
+
                     </div>
+                    {errors.otp && (
+                        <p className="mt-1 text-sm text-red-400">
+                            {errors.otp[0]}
+                        </p>
+                    )}
                 </div>
 
                 {/* Button */}
                 <button
+                    disabled={loading}
                     type="submit"
                     className="w-full rounded-xl bg-gradient-to-r from-pink-500 to-purple-600 py-2.5 font-semibold text-white transition hover:opacity-90 active:scale-[0.98]"
                 >
-                    Verify OTP
+                    {loading ? "Verifying..." : "Verify OTP"}
                 </button>
 
                 {/* Footer */}
@@ -132,6 +208,7 @@ export const Otp = () => {
 
                     <button
                         type="button"
+                        onClick={otpReset}
                         className="mt-2 text-sm font-semibold cursor-pointer text-pink-400 transition hover:text-pink-300"
                     >
                         Resend OTP

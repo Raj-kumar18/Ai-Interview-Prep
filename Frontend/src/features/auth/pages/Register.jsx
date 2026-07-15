@@ -1,9 +1,46 @@
 import { Link } from "react-router";
+import { useAuth } from "../hook/useAuth";
+import { useState } from "react";
+import { useNavigate } from "react-router";
+import toast from "react-hot-toast";
 
 export const Register = () => {
+
+    const navigate = useNavigate()
+    const { loading, handleRegister } = useAuth()
+    const [username, setUsername] = useState("")
+    const [email, setEmail] = useState("")
+    const [password, setPassword] = useState("")
+    const [errors, setErrors] = useState({})
+
+    const handleSubmit = async (e) => {
+        e.preventDefault()
+
+        try {
+            await handleRegister({
+                username,
+                email,
+                password
+            })
+            toast.success("Register SuccessFully")
+            setErrors({});
+            setEmail("")
+            setUsername("")
+            setPassword("")
+            navigate("/verify-email")
+        } catch (error) {
+            if (error.response?.data?.errors) {
+                setErrors(error.response.data.errors);
+            } else {
+
+                toast.error(error.response?.data?.message || "Account Created Failed");
+            }
+        }
+    }
+
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-black flex items-center justify-center px-4">
-            <form className="w-full max-w-md rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 shadow-2xl">
+            <form onSubmit={handleSubmit} className="w-full max-w-md rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl p-6 shadow-2xl">
 
                 {/* Heading */}
                 <div className="mb-6 text-center">
@@ -27,11 +64,28 @@ export const Register = () => {
                     </label>
 
                     <input
+                        value={username}
+                        onChange={(e) => {
+                            setUsername(e.target.value)
+                            setErrors((prev) => ({
+                                ...prev,
+                                username: undefined,
+                            }));
+                        }}
                         id="username"
                         type="text"
                         placeholder="John Doe"
-                        className="w-full rounded-xl border border-slate-700 bg-slate-900/70 px-4 py-2.5 text-white placeholder:text-slate-500 outline-none transition-all duration-200 focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20"
+                        className={`w-full rounded-xl px-4 py-2.5 bg-slate-900/70 text-white outline-none transition
+    ${errors.username
+                                ? "border border-red-500 focus:ring-red-500/20"
+                                : "border border-slate-700 focus:border-pink-500 focus:ring-pink-500/20"
+                            }`}
                     />
+                    {errors.username && (
+                        <p className="mt-1 text-sm text-red-400">
+                            {errors.username[0]}
+                        </p>
+                    )}
                 </div>
 
                 {/* Email */}
@@ -44,11 +98,30 @@ export const Register = () => {
                     </label>
 
                     <input
+                        value={email}
+                        onChange={(e) => {
+                            setEmail(e.target.value)
+
+                            setErrors((prev) => ({
+                                ...prev,
+                                email: undefined
+
+                            }))
+                        }}
                         id="email"
                         type="email"
                         placeholder="john@example.com"
-                        className="w-full rounded-xl border border-slate-700 bg-slate-900/70 px-4 py-2.5 text-white placeholder:text-slate-500 outline-none transition-all duration-200 focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20"
+                        className={`w-full rounded-xl px-4 py-2.5 bg-slate-900/70 text-white outline-none transition
+    ${errors.email
+                                ? "border border-red-500 focus:ring-red-500/20"
+                                : "border border-slate-700 focus:border-pink-500 focus:ring-pink-500/20"
+                            }`}
                     />
+                    {errors.email && (
+                        <p className="mt-1 text-sm text-red-400">
+                            {errors.email[0]}
+                        </p>
+                    )}
                 </div>
 
                 {/* Password */}
@@ -61,11 +134,29 @@ export const Register = () => {
                     </label>
 
                     <input
-                        id="password"
+                        value={password}
+                        onChange={(e) => {
+                            setPassword(e.target.value);
+
+                            setErrors((prev) => ({
+                                ...prev,
+                                password: undefined,
+                            }));
+                        }}
                         type="password"
+                        id="password"
                         placeholder="••••••••"
-                        className="w-full rounded-xl border border-slate-700 bg-slate-900/70 px-4 py-2.5 text-white placeholder:text-slate-500 outline-none transition-all duration-200 focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20"
+                        className={`w-full rounded-xl px-4 py-2.5 bg-slate-900/70 text-white outline-none transition
+    ${errors.password
+                                ? "border border-red-500 focus:ring-red-500/20"
+                                : "border border-slate-700 focus:border-pink-500 focus:ring-pink-500/20"
+                            }`}
                     />
+                    {errors.password && (
+                        <p className="mt-1 text-sm text-red-400">
+                            {errors.password[0]}
+                        </p>
+                    )}
                 </div>
 
                 {/* Register Button */}

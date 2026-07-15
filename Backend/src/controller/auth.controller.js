@@ -208,7 +208,7 @@ export async function logoutAllController(req, res) {
     let decoded = jwt.verify(refreshToken, config.JWT_SECRET)
 
     await sessionModel.updateMany({
-        user: decoded._id,
+        user: decoded.id,
         revoked: false
     }, {
         revoked: true
@@ -247,6 +247,7 @@ export async function verifyEmail(req, res) {
     try {
         const { email, otp } = req.body
 
+        console.log(email, otp)
         if (!email || !otp) {
             return res.status(400).json({ message: "Email and OTP are required" })
         }
@@ -345,6 +346,71 @@ export async function resendOtpController(req, res) {
         return res.status(500).json({
             success: false,
             message: "Internal Server Error",
+        });
+    }
+}
+
+export async function getAllSessionsController(req, res) {
+    try {
+        const userId = req.user.id; // auth middleware se
+        const currentRefreshToken = req.cookies.refreshToken;
+        const currentHash = currentRefreshToken ? hashToken(currentRefreshToken) : null;
+
+        const sessions = await sessionModel
+            .find({
+                user: userId
+            })
+            .sort({ createdAt: -1 });
+
+        const formattedSessions = sessions.map(session => {
+            const sessionObj = session.toObject();
+            sessionObj.isCurrent = session.refreshToken === currentHash;
+            delete sessionObj.refreshToken;
+            return sessionObj;
+        });
+
+        res.status(200).json({
+            success: true,
+            count: formattedSessions.length,
+            sessions: formattedSessions
+        });
+
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+}
+
+export async function revokeSessionController(req, res) {
+    try {
+        const { sessionId } = req.params;
+        const userId = req.user.id;
+
+        const session = await sessionModel.findOne({
+            _id: sessionId,
+            user: userId
+        });
+
+        if (!session) {
+            return res.status(404).json({
+                success: false,
+                message: "Session not found"
+            });
+        }
+
+        session.revoked = true;
+        await session.save();
+
+        res.status(200).json({
+            success: true,
+            message: "Session revoked successfully"
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message
         });
     }
 }
