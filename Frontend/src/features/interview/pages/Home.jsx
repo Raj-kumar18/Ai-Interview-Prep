@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router';
 import { useInterview } from '../hook/useInterview.js';
 import Navbar from '../../../components/Navbar';
+import toast from 'react-hot-toast';
 
 const Home = () => {
     const { loading, generateReport, reports } = useInterview();
@@ -13,6 +14,31 @@ const Home = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const MAX_JOB_CHARS = 3000;
+    const [isDragging, setIsDragging] = useState(false);
+
+    const handleDragOver = (e) => {
+        e.preventDefault();
+        setIsDragging(true);
+    };
+
+    const handleDragLeave = (e) => {
+        e.preventDefault();
+        setIsDragging(false);
+    };
+
+    const handleDrop = (e) => {
+        e.preventDefault();
+        setIsDragging(false);
+        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+            const file = e.dataTransfer.files[0];
+            if (file.type === 'application/pdf') {
+                setResumeFile(file);
+                toast.success(`Selected file: ${file.name}`);
+            } else {
+                toast.error("Please upload a PDF file only");
+            }
+        }
+    };
 
     const isFormValid = (resumeFile || selfDescription.trim()) && jobDescription.trim();
 
@@ -150,9 +176,19 @@ const Home = () => {
                                 </div>
                                 
                                 {!resumeFile ? (
-                                    <label className="flex flex-col items-center justify-center gap-2 p-6 bg-[#1a1f2e] border-2 border-dashed border-[#3a4452] hover:border-[#ff69b4] rounded-xl cursor-pointer transition-colors">
+                                    <label 
+                                        onDragOver={handleDragOver}
+                                        onDragLeave={handleDragLeave}
+                                        onDrop={handleDrop}
+                                        className={`flex flex-col items-center justify-center gap-2 p-6 bg-[#1a1f2e] border-2 border-dashed rounded-xl cursor-pointer transition-colors ${
+                                            isDragging 
+                                            ? 'border-[#ff69b4] bg-[#ff69b4]/5' 
+                                            : 'border-[#3a4452] hover:border-[#ff69b4]'
+                                        }`}
+                                    >
                                         <i className="ri-upload-cloud-2-line text-3xl text-[#ef0c85]/80"></i>
                                         <span className="text-sm font-medium text-white">Click to upload or drag & drop</span>
+                                        <input type="file" accept=".pdf" className="hidden" onChange={handleFileChange} />
                                     </label>
                                 ) : (
                                     <div className="flex items-center justify-between p-4 bg-[#1a1f2e] border border-[#3a4452] rounded-xl">

@@ -9,6 +9,7 @@ export const Otp = () => {
     const { loading, handleVerifyEmail, handleResendOtp } = useAuth()
     const [errors, setErrors] = useState({})
     const inputRef = useRef([]);
+    const navigate = useNavigate()
 
     useEffect(() => {
         inputRef.current[0]?.focus();

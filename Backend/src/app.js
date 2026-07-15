@@ -12,7 +12,7 @@ app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 app.use(morgan("dev"))
 app.use(cors({
-    origin: "https://ai-interview-prep-sigma-ruby.vercel.app",
+    origin: "http://localhost:5173",
     credentials: true
 }));
 
